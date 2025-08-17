@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import pdf from 'pdf-parse';
+// 🚨 Using patched pdf-parse to avoid buggy debug mode that reads a non-existent test PDF
+import pdf from './patchedPdfParse.mjs';
 import mammoth from 'mammoth';
 import textract from 'textract';
 import { fileURLToPath } from 'url';

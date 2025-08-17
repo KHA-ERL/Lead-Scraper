@@ -1,29 +1,29 @@
 import axios from 'axios';
-import fetch from 'node-fetch';
+//import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
 import { URL } from 'url';
 import { validateEmail } from './utils.mjs';
 
 // Ensure Axios uses node-fetch
-axios.defaults.adapter = function (config) {
-  config.adapter = async function (config) {
-    const response = await fetch(config.url, {
-      method: config.method,
-      headers: config.headers,
-      body: config.data
-    });
+// axios.defaults.adapter = function (config) {
+//   config.adapter = async function (config) {
+//     const response = await fetch(config.url, {
+//       method: config.method,
+//       headers: config.headers,
+//       body: config.data
+//     });
 
-    return {
-      data: await response.json(),
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers
-    };
-  };
-};
+//     return {
+//       data: await response.json(),
+//       status: response.status,
+//       statusText: response.statusText,
+//       headers: response.headers
+//     };
+//   };
+// };
 
 // Ensure axios doesn't try to use undici
-globalThis.fetch = fetch;
+//globalThis.fetch = fetch;
 
 const visited = new Set();
 
@@ -58,7 +58,7 @@ async function crawlPage(url, results, depth = 0) {
         const lead = {
             url,
             name: name || 'N/A',
-            email: validateEmail(emailMatch?.[0]) ? emailMatch[0] : 'N/A',
+            email: emailMatch && validateEmail(emailMatch[0]) ? emailMatch[0] : 'N/A',
             phone: phoneMatch?.[0] || 'N/A',
             address: addressMatch?.[0] || 'N/A',
             services: services || 'N/A'
@@ -125,7 +125,7 @@ async function crawlPage(url, results, depth = 0) {
 //         const lead = {
 //             url,
 //             name: name || 'N/A',
-//             email: validateEmail(emailMatch?.[0]) ? emailMatch[0] : 'N/A',
+//             email: emailMatch && validateEmail(emailMatch[0]) ? emailMatch[0] : 'N/A',
 //             phone: phoneMatch?.[0] || 'N/A',
 //             address: addressMatch?.[0] || 'N/A',
 //             services: services || 'N/A'
