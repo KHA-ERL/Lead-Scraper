@@ -1,3 +1,4 @@
 node_modules/
-public/lead/
-public/validated leads/
+lead/
+validated leads/
+.DS_Store
