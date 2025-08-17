@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Email Lead Extractor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white p-6 rounded shadow-md w-full max-w-xl">
+    <h1 class="text-2xl font-bold mb-4">Email Lead Extractor</h1>
+
+    <!-- URL input section -->
+    <div class="mb-6">
+      <textarea id="urls" class="w-full border p-2 rounded" rows="4" placeholder="Enter URLs separated by commas..."></textarea>
+    </div>
+
+    <!-- File upload section -->
+    <div class="mb-6">
+      <input type="file" id="fileUpload" class="block w-full border p-2 rounded" />
+    </div>
+
+    <!-- Button to trigger either process -->
+    <button onclick="startProcessing()" class="bg-blue-600 text-white px-4 py-2 rounded mt-4 hover:bg-blue-700">Start Processing</button>
+
+    <div id="loader" class="mt-4 hidden">
+      <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 mx-auto animate-spin"></div>
+      <p class="text-center text-sm mt-2">Processing...</p>
+    </div>
+
+    <div id="download" class="mt-4 hidden">
+      <a id="downloadLink" class="text-blue-600 underline">Download Leads File</a>
+    </div>
+  </div>
+
+  <script>
+    async function startProcessing() {
+      const loader = document.getElementById('loader');
+      const download = document.getElementById('download');
+      const downloadLink = document.getElementById('downloadLink');
+      const urls = document.getElementById('urls').value.split(',');
+      const file = document.getElementById('fileUpload').files[0];
+
+      loader.classList.remove('hidden');
+      download.classList.add('hidden');
+
+      let response;
+
+      if (urls.length > 0 && urls[0].trim() !== '') {
+        // Process URLs
+        response = await fetch('/api/scrape', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ urls })
+        });
+      } else if (file) {
+        // Process file upload
+        const formData = new FormData();
+        formData.append('file', file);
+        response = await fetch('/api/extract-emails', {
+          method: 'POST',
+          body: formData
+        });
+      } else {
+        alert('Please provide either URLs or a file to process.');
+        loader.classList.add('hidden');
+        return;
+      }
+
+      const result = await response.json();
+      loader.classList.add('hidden');
+
+      if (result.success) {
+        downloadLink.href = result.file;
+        download.classList.remove('hidden');
+      } else {
+        alert('Processing failed. Please try again.');
+      }
+    }
+  </script>
+</body>
+</html>
