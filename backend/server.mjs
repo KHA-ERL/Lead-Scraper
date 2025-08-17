@@ -5,6 +5,7 @@ import path from "path";
 import multer from "multer";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import "./logger.mjs";
 import { log, logError } from "./logger.mjs";
 import { scrapeAndExtractLeads } from "./scraper.mjs";
 import { processFile } from "./emailExtract.mjs";
@@ -18,7 +19,16 @@ const app = express();
 const PORT = 3000;
 
 // Multer for file uploads
-const upload = multer({ dest: "uploads/" });
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const name = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+    cb(null, name);
+  },
+});
+
+const upload = multer({ storage });
 
 // Middlewares
 app.use(cors());

@@ -1,6 +1,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { URL } from "url";
+import "./logger.mjs";
 import { log, logError } from "./logger.mjs";
 import { validateEmail } from "./utils.mjs";
 import { chromium } from "playwright";
