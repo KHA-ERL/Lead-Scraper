@@ -2,3 +2,4 @@ node_modules/
 lead/
 validated leads/
 .DS_Store
+package-lock.json
