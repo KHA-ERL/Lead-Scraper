@@ -1,34 +1,16 @@
 import express from "express";
 import cors from "cors";
-import fs from "fs";
-import path from "path";
 import multer from "multer";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
 import "./logger.mjs";
 import { log, logError } from "./logger.mjs";
 import { scrapeAndExtractLeads } from "./scraper.mjs";
-import { processFile } from "./emailExtract.mjs";
-
-// Emulate __dirname in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { processUploadedFile } from "./emailExtract.mjs";
 
 // Create Express app
 const app = express();
 const PORT = 3000;
 
-// Multer for file uploads
-const storage = multer.diskStorage({
-  destination: "uploads/",
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
-    cb(null, name);
-  },
-});
-
-const upload = multer({ storage });
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Middlewares
 app.use(cors());
@@ -51,9 +33,6 @@ app.post("/api/scrape", async (req, res) => {
     const depthLimit = 10;
     const leads = await scrapeAndExtractLeads(urls, { depthLimit });
 
-    const fileName = `leads_${Date.now()}.txt`;
-    const filePath = join(__dirname, "../public/leads", fileName);
-
     const formattedLeads = leads
       .map(
         (lead, i) => `
@@ -69,9 +48,7 @@ URL: ${lead.url}
       )
       .join("\n");
 
-    fs.writeFileSync(filePath, formattedLeads);
-
-    res.json({ success: true, file: `/leads/${fileName}` });
+    res.json({ success: true, text: formattedLeads });
   } catch (err) {
     logError("❌ Scraping error:", err);
     res.status(500).json({ success: false, message: "Scraping failed" });
@@ -80,22 +57,21 @@ URL: ${lead.url}
 
 // 📌 Extract emails from uploaded file
 app.post("/api/extract-emails", upload.single("file"), async (req, res) => {
-  const filePath = req.file.path;
+  if (!req.file) {
+    return res
+      .status(400)
+      .json({ success: false, message: "No file uploaded." });
+  }
 
   try {
-    const outputFileName = `extracted_emails_${Date.now()}.txt`;
-    const outputFilePath = join(__dirname, "../public/leads", outputFileName);
+    const text = await processUploadedFile(req.file);
 
-    await processFile(filePath, outputFilePath);
-
-    res.json({ success: true, file: `/leads/${outputFileName}` });
+    res.json({ success: true, text });
   } catch (err) {
     logError("❌ Email extraction error:", err);
     res
       .status(500)
       .json({ success: false, message: "Email extraction failed" });
-  } finally {
-    fs.unlinkSync(filePath); // Delete uploaded temp file
   }
 });
 

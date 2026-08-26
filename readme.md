@@ -5,6 +5,7 @@ A powerful web and file-based email extraction tool built with Node.js, Playwrig
 - 🕸️ Scrape business contact details (email, phone, address, services) from websites.
 - 📂 Upload documents (`.pdf`, `.docx`, `.txt`, etc.) to extract embedded email addresses.
 - ✅ Automatically detect file types and process content using smart parsers (Mammoth, textract, pdf-parse).
+- 📋 Return results directly in the browser for one-tap clipboard copying.
 - 🌐 Interact via a user-friendly web UI served on `localhost:3000`.
 
 ---
@@ -80,7 +81,7 @@ Payload:
 }
 
 Response:
-Returns a downloadable .txt file with extracted leads.
+Returns extracted leads as text that can be copied from the browser.
 
 📤 File Upload for Email Extraction
 
@@ -90,7 +91,7 @@ Form-Data:
 file – the document file to extract emails from.
 
 Response:
-Returns a downloadable .txt file with extracted email addresses.
+Returns extracted email addresses as text that can be copied from the browser.
 
 📦 email/
 ├── backend/
@@ -99,9 +100,7 @@ Returns a downloadable .txt file with extracted email addresses.
 │   ├── scraper.mjs             # Core web scraping logic
 │   └── server.mjs              # Express server and route handlers
 ├── public/
-│   ├── leads/                  # Output TXT files
 │   └── screenshot.png          # UI screenshot
-└── uploads/                    # Temp file uploads
 
 ⚙️ Scripts
 npm start   # Launch the Express server on port 3000
@@ -125,7 +124,7 @@ Ensure that Playwright dependencies are installed properly
 
 For .pdf files that are image-based, OCR is not supported by default. You can add Tesseract integration if needed.
 
-All generated leads are stored in the public/leads/ directory.
+Generated leads are returned directly to the page instead of being stored in `public/leads/`.
 
 📝 License
 
@@ -134,4 +133,3 @@ This project is licensed under the ISC License.
 👤 Author
 
 KHA-ERL
-
