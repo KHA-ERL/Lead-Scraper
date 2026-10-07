@@ -1,0 +1,33 @@
+[2026-10-07T18:18:21.476Z] ✅ Server running at: http://localhost:3000
+[2026-10-07T18:20:38.311Z] Axios failed for jhuuu@jj.jh
+jnjbjubk.com
+kjnkbas878@wwe.ll
+hhyyh@gmail.com. Trying Playwright...
+[2026-10-07T18:20:38.318Z] ❌ ERROR: ❌ Failed to crawl jhuuu@jj.jh
+jnjbjubk.com
+kjnkbas878@wwe.ll
+hhyyh@gmail.com: browserType.launch: Executable doesn't exist at /Users/macintosh/Library/Caches/ms-playwright/chromium_headless_shell-1181/chrome-mac/headless_shell
+╔═════════════════════════════════════════════════════════════════════════╗
+║ Looks like Playwright Test or Playwright was just installed or updated. ║
+║ Please run the following command to download new browsers:              ║
+║                                                                         ║
+║     npx playwright install                                              ║
+║                                                                         ║
+║ <3 Playwright Team                                                      ║
+╚═════════════════════════════════════════════════════════════════════════╝
+[2026-10-07T18:22:45.527Z] Axios failed for https://jhuuu%40jj.jhjnjbjubk.comkjnkbas878%40wwe.llhhyyh@gmail.com/. Trying Playwright...
+[2026-10-07T18:22:45.531Z] ❌ ERROR: ❌ Failed to crawl https://jhuuu%40jj.jhjnjbjubk.comkjnkbas878%40wwe.llhhyyh@gmail.com/: browserType.launch: Executable doesn't exist at /Users/macintosh/Library/Caches/ms-playwright/chromium_headless_shell-1181/chrome-mac/headless_shell
+╔═════════════════════════════════════════════════════════════════════════╗
+║ Looks like Playwright Test or Playwright was just installed or updated. ║
+║ Please run the following command to download new browsers:              ║
+║                                                                         ║
+║     npx playwright install                                              ║
+║                                                                         ║
+║ <3 Playwright Team                                                      ║
+╚═════════════════════════════════════════════════════════════════════════╝
+[2026-10-07T18:22:45.531Z] []
+[2026-10-07T18:22:57.184Z] Skipping invalid URL input: jhuuu@jj.jh
+jnjbjubk.com
+kjnkbas878@wwe.ll
+hhyyh@gmail.com
+[2026-10-07T18:22:57.184Z] []

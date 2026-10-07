@@ -41,13 +41,13 @@ const extractTextFromBuffer = (buffer, ext, fallbackFilePath) => {
         .then((result) => resolve(result.value))
         .catch((err) => reject(new Error("DOCX parsing failed: " + err.message)));
 
-    } else if (ext === '.txt') {
+    } else if (isPlainTextExtension(ext)) {
       resolve(buffer.toString());
 
     } else {
       const mimeType = mime.lookup(fallbackFilePath);
       if (!mimeType) {
-        return reject(new Error("Could not determine MIME type for: " + fallbackFilePath));
+        return resolve(buffer.toString());
       }
 
       textract.fromFileWithMimeAndPath(mimeType, fallbackFilePath, (error, text) => {
@@ -62,6 +62,9 @@ const extractTextFromBuffer = (buffer, ext, fallbackFilePath) => {
 };
 
 const formatEmails = (emails) => emails.join('\n');
+const isPlainTextExtension = (ext) => {
+  return ['.txt', '.csv', '.md', '.json', '.html', '.htm', '.xml'].includes(ext);
+};
 
 // 📤 Main handler
 export const processFile = async (inputPath, outputPath) => {
@@ -88,7 +91,8 @@ export const processFile = async (inputPath, outputPath) => {
 };
 
 export const processUploadedFile = async (file) => {
-  const ext = extname(file.originalname).toLowerCase();
+  const originalname = file.originalname || file.name || 'uploaded-file';
+  const ext = extname(originalname).toLowerCase();
   const tempFilePath = path.join(
     os.tmpdir(),
     `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`
@@ -103,7 +107,7 @@ export const processUploadedFile = async (file) => {
     }
 
     const emails = getEmailsFromText(text);
-    console.log(`✅ Extracted ${emails.length} emails from ${file.originalname}`);
+    console.log(`✅ Extracted ${emails.length} emails from ${originalname}`);
     return formatEmails(emails);
   } catch (err) {
     console.error(`❌ Failed to process uploaded file: ${err.message}`);

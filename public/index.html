@@ -11,12 +11,13 @@
 
     <!-- URL input section -->
     <div class="mb-6">
-      <textarea id="urls" class="w-full border p-2 rounded" rows="4" placeholder="Enter URLs separated by commas..."></textarea>
+      <textarea id="urls" class="w-full border p-2 rounded" rows="4" placeholder="Enter URLs or paste text containing emails..."></textarea>
     </div>
 
     <!-- File upload section -->
     <div class="mb-6">
       <input type="file" id="fileUpload" class="block w-full border p-2 rounded" />
+      <p id="fileStatus" class="mt-2 text-sm text-gray-600"></p>
     </div>
 
     <!-- Button to trigger either process -->
@@ -49,17 +50,41 @@
 
   <script>
     let latestResult = '';
+    let pastedFile = null;
+
+    const fileUpload = document.getElementById('fileUpload');
+    const fileStatus = document.getElementById('fileStatus');
+
+    fileUpload.addEventListener('change', () => {
+      pastedFile = null;
+      updateFileStatus(fileUpload.files[0]);
+    });
+
+    document.addEventListener('paste', (event) => {
+      const file = [...(event.clipboardData?.files || [])][0];
+      if (!file) return;
+
+      pastedFile = file;
+      fileUpload.value = '';
+      updateFileStatus(file);
+    });
 
     async function startProcessing() {
       const loader = document.getElementById('loader');
       const resultPanel = document.getElementById('result');
       const resultText = document.getElementById('resultText');
       const copyStatus = document.getElementById('copyStatus');
-      const urls = document.getElementById('urls').value
-        .split(',')
-        .map((url) => url.trim())
+      const inputText = document.getElementById('urls').value;
+      const emails = getEmailsFromText(inputText);
+      const urls = inputText
+        .split(/[\s,]+/)
+        .map((value) => value.trim())
+        .filter(Boolean)
+        .filter((value) => !isEmail(value))
+        .filter(isLikelyUrl)
+        .map(normalizeUrl)
         .filter(Boolean);
-      const file = document.getElementById('fileUpload').files[0];
+      const file = fileUpload.files[0] || pastedFile;
 
       loader.classList.remove('hidden');
       resultPanel.classList.add('hidden');
@@ -75,6 +100,13 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ urls })
           });
+        } else if (emails.length > 0) {
+          latestResult = emails.join('\n');
+          resultText.value = latestResult;
+          loader.classList.add('hidden');
+          resultPanel.classList.remove('hidden');
+          await copyResult();
+          return;
         } else if (file) {
           // Process file upload
           const formData = new FormData();
@@ -93,7 +125,9 @@
       loader.classList.add('hidden');
 
       if (response.ok && data.success) {
-        latestResult = data.text || '';
+        latestResult = [data.text, emails.join('\n')]
+          .filter((value) => value && value.trim())
+          .join('\n');
         resultText.value = latestResult;
         resultPanel.classList.remove('hidden');
 
@@ -103,7 +137,14 @@
           await copyResult();
         }
       } else {
-        alert(data.message || 'Processing failed. Please try again.');
+        if (emails.length > 0) {
+          latestResult = emails.join('\n');
+          resultText.value = latestResult;
+          resultPanel.classList.remove('hidden');
+          await copyResult();
+        } else {
+          alert(data.message || 'Processing failed. Please try again.');
+        }
       }
       } catch (error) {
         loader.classList.add('hidden');
@@ -132,6 +173,28 @@
         resultText.select();
         copyStatus.textContent = 'Select all and copy from the box above.';
       }
+    }
+
+    function getEmailsFromText(text) {
+      const matches = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/g) || [];
+      return [...new Set(matches)];
+    }
+
+    function isEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    }
+
+    function isLikelyUrl(value) {
+      return /^https?:\/\//i.test(value) || /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/.*)?$/.test(value);
+    }
+
+    function normalizeUrl(value) {
+      if (/^https?:\/\//i.test(value)) return value;
+      return `https://${value}`;
+    }
+
+    function updateFileStatus(file) {
+      fileStatus.textContent = file ? `Selected file: ${file.name || 'pasted file'}` : '';
     }
   </script>
 </body>

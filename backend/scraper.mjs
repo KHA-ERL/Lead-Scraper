@@ -13,17 +13,26 @@ const HEADERS = {
 };
 
 const visited = new Set();
+const DEFAULT_DEPTH_LIMIT = 1;
 
 /**
  * Main entry point. Crawls multiple URLs and returns extracted leads.
  */
-export async function scrapeAndExtractLeads(urls) {
+export async function scrapeAndExtractLeads(urls, options = {}) {
   visited.clear();
   const results = [];
+  const depthLimit = Number.isInteger(options.depthLimit)
+    ? options.depthLimit
+    : DEFAULT_DEPTH_LIMIT;
 
   for (const rawUrl of urls) {
-    const url = rawUrl.trim();
-    await crawlPage(url, results);
+    const url = normalizeStartUrl(rawUrl);
+    if (!url) {
+      log(`Skipping invalid URL input: ${rawUrl}`);
+      continue;
+    }
+
+    await crawlPage(url, results, 0, depthLimit);
   }
 
   return results;
@@ -32,8 +41,8 @@ export async function scrapeAndExtractLeads(urls) {
 /**
  * Crawl a single page and optionally follow internal links (shallow).
  */
-async function crawlPage(url, results, depth = 0) {
-  if (visited.has(url) || depth > 1) return;
+async function crawlPage(url, results, depth = 0, depthLimit = DEFAULT_DEPTH_LIMIT) {
+  if (visited.has(url) || depth > depthLimit) return;
   visited.add(url);
 
   let $;
@@ -114,11 +123,55 @@ email = email || "N/A";
 
   // Recurse into internal links
   const baseUrl = new URL(url).origin;
+  const internalLinks = [];
+
   $("a[href]").each((_, el) => {
     const link = $(el).attr("href");
-    if (link && (link.startsWith("/") || link.startsWith(baseUrl))) {
-      const fullUrl = link.startsWith("/") ? `${baseUrl}${link}` : link;
-      crawlPage(fullUrl, results, depth + 1);
+    const fullUrl = normalizeInternalUrl(link, baseUrl);
+
+    if (fullUrl && !visited.has(fullUrl)) {
+      internalLinks.push(fullUrl);
     }
   });
+
+  await Promise.all(
+    internalLinks.map((fullUrl) =>
+      crawlPage(fullUrl, results, depth + 1, depthLimit)
+    )
+  );
+}
+
+function normalizeInternalUrl(link, baseUrl) {
+  if (!link) return null;
+
+  try {
+    const parsed = new URL(link, baseUrl);
+
+    if (!["http:", "https:"].includes(parsed.protocol)) return null;
+    if (parsed.origin !== baseUrl) return null;
+
+    parsed.hash = "";
+    return parsed.href;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeStartUrl(rawUrl) {
+  if (!rawUrl || validateEmail(rawUrl.trim())) return null;
+
+  try {
+    const value = rawUrl.trim();
+    if (/\s/.test(value)) return null;
+
+    const parsed = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+
+    if (!["http:", "https:"].includes(parsed.protocol)) return null;
+    if (!parsed.hostname.includes(".")) return null;
+
+    parsed.hash = "";
+    return parsed.href;
+  } catch {
+    return null;
+  }
 }
